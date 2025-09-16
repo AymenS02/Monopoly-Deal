@@ -1,33 +1,52 @@
-import React from "react";
-import { cards } from "../game/data/cards"; // make sure your cards.ts exports an array
+// import { cards } from "../game/data/cards"; // make sure your cards.ts exports an array
 
-const GameBoard = () => {
+type BoardProps = {
+  turn: number;
+};
+
+const Board = ({ turn }: BoardProps) => {
   return (
-    <div className="w-full h-[80vh] flex justify-center items-center bg-gray-200 p-4">
-      <div className="w-full h-full bg-white border-2 border-gray-300 rounded-lg shadow-md overflow-y-scroll p-4">
-        <h2 className="text-2xl font-bold mb-4 text-center">All Cards</h2>
+    <div className="h-full flex flex-col items-center p-6">
+      <div className="flex justify-center items-start mb-6 gap-6">
+        <div className="p-6 h-80 bg-red-400">deck</div>
+        <div className="p-6 h-80 bg-red-400">discard pile</div>
+      </div>
 
-        <div className="grid grid-cols-6 gap-4">
-          {cards.map((card, index) => (
-            <div
-              key={index}
-              className="flex flex-col items-center p-2 border rounded-lg shadow bg-gray-50 hover:bg-gray-100 transition"
-            >
-              <img
-                src={card.image}
-                alt={card.name}
-                className="w-20 h-28 object-cover mb-2"
-              />
-              <p className="text-sm font-medium text-center">{card.name}</p>
-              {card.value !== undefined && (
-                <p className="text-xs text-gray-600">Value: {card.value}</p>
-              )}
-            </div>
-          ))}
+      <div className="h-full flex justify-around items-start mb-6 gap-6">
+        <div className="bg-green-600 h-min w-1/6 p-6">
+          <h2 className="text-xl font-bold mb-4">Player 1</h2>
+          <p className="mt-4">Properties</p>
+          <p className="mt-4">Bank</p>
         </div>
+
+        <div className="bg-green-600 h-min w-1/6 p-6">
+          <h2 className="text-xl font-bold mb-4">Player 2</h2>
+          <p className="mt-4">Properties</p>
+          <p className="mt-4">Bank</p>
+        </div>
+
+        <div className="bg-green-600 h-min w-1/6 p-6">
+          <h2 className="text-xl font-bold mb-4">Player 3</h2>
+          <p className="mt-4">Properties</p>
+          <p className="mt-4">Bank</p>
+        </div>
+
+        <div className="bg-green-600 h-min w-1/6 p-6">
+          <h2 className="text-xl font-bold mb-4">Player 4</h2>
+          <p className="mt-4">Properties</p>
+          <p className="mt-4">Bank</p>
+        </div>
+
+        <div className="bg-green-600 h-min w-1/6 p-6">
+          <h2 className="text-xl font-bold mb-4">Player 5</h2>
+          <p className="mt-4">Properties</p>
+          <p className="mt-4">Bank</p>
+        </div>
+
       </div>
     </div>
+
   );
 };
 
-export default GameBoard;
+export default Board;

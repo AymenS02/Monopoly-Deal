@@ -134,4 +134,5 @@ export const cards: Card[] = [
     { id: 212, name: "Pass Go", type: "action", value: 1, actionEffect: "draw_2", image: "/action/pass_go.jpg" },
     { id: 213, name: "House", type: "action", value: 3, actionEffect: "add_house", image: "/action/house.jpg" },
     { id: 214, name: "Hotel", type: "action", value: 4, actionEffect: "add_hotel", image: "/action/hotel.jpg" },
+
 ];
