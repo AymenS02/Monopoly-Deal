@@ -2,6 +2,7 @@ import { useContext } from "react";
 import Board from "../components/Board";
 import Hand from "../components/Hand";
 import { StoreContext } from "../game/store/context";
+import { socket } from "../game/socket"; // make sure you export socket from your socket file
 
 const Game = () => {
   const { gameState } = useContext(StoreContext)!;
@@ -23,7 +24,11 @@ const Game = () => {
           <h2 className="text-white text-xl font-bold mb-2 text-center">
             {currentPlayer.name}'s Hand
           </h2>
-          <Hand playerName={currentPlayer.name} hand={currentPlayer.hand} />
+          <Hand 
+            playerName={currentPlayer.name} 
+            hand={currentPlayer.hand} 
+            isMe={currentPlayer.id === socket.id} 
+          />
         </div>
       )}
     </div>

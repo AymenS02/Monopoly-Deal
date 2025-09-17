@@ -1,8 +1,8 @@
-// src/game/utiils/deck.ts
+// src/game/utils/deck.ts
 
 import type { CardTemplate } from "../data/cards";
 
-// Each card in the actual game deck
+// Each card in the actual game deck (instance created from a template)
 export type Card = {
   instanceId: string;  // unique per copy
   templateId: number;  // original template id

@@ -1,3 +1,6 @@
+// src/game/store/context.ts
+
+
 import { createContext } from "react";
 import type { GameState } from "./gameStore";
 
@@ -6,5 +9,5 @@ export type StoreContextType = {
   setGameState: React.Dispatch<React.SetStateAction<GameState>>;
 };
 
-// Use undefined initially
+// Initialize with undefined to enforce provider usage
 export const StoreContext = createContext<StoreContextType | undefined>(undefined);

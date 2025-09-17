@@ -1,8 +1,11 @@
+// src/game/store/gameStore.ts
+
+
 import type { Card } from "../utils/deck";
 
 // Each player in the game
 export type Player = {
-  id: number;
+  id: string | undefined; // socket ID
   name: string;
   hand: Card[];
   bank: Card[];

@@ -4,9 +4,10 @@ import type { Card } from "../game/utils/deck";
 interface HandProps {
   playerName: string;
   hand: Card[];
+  isMe?: boolean; // Add a prop to know if this is your hand
 }
 
-const Hand: React.FC<HandProps> = ({ playerName, hand }) => {
+const Hand: React.FC<HandProps> = ({ playerName, hand, isMe = false }) => {
   return (
     <div className="bg-black/20 rounded-lg p-4 border border-white/10">
       <div className="flex items-center justify-between mb-3">
@@ -15,16 +16,31 @@ const Hand: React.FC<HandProps> = ({ playerName, hand }) => {
           {hand.length}
         </span>
       </div>
+
       <div className="flex flex-wrap gap-1">
-        {hand.slice(0, 8).map((card) => (
-          <img
-            key={card.instanceId}
-            src={card.image}
-            alt={card.name}
-            className="w-8 h-10 object-cover rounded border border-white/20 shadow-sm hover:scale-110 transition-transform duration-200 cursor-pointer"
-          />
-        ))}
-        {hand.length > 8 && (
+        {hand.length === 0 && !isMe && (
+          <div className="text-white/60 italic text-xs">Cards hidden</div>
+        )}
+
+        {hand.slice(0, 8).map((card, index) =>
+          isMe ? (
+            <img
+              key={card.instanceId}
+              src={card.image}
+              alt={card.name}
+              className="w-8 h-10 object-cover rounded border border-white/20 shadow-sm hover:scale-110 transition-transform duration-200 cursor-pointer"
+            />
+          ) : (
+            <div
+              key={index}
+              className="w-8 h-10 bg-white/10 rounded border border-white/20 flex items-center justify-center text-white text-xs font-medium"
+            >
+              ?
+            </div>
+          )
+        )}
+
+        {hand.length > 8 && isMe && (
           <div className="w-8 h-10 bg-white/10 rounded border border-white/20 flex items-center justify-center text-white text-xs font-medium">
             +{hand.length - 8}
           </div>

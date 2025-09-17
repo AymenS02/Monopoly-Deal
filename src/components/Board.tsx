@@ -94,21 +94,6 @@ const Board = () => {
                           {player.hand.length}
                         </span>
                       </div>
-                      <div className="flex flex-wrap gap-1">
-                        {player.hand.slice(0, 8).map((card) => (
-                          <img 
-                            key={card.instanceId} 
-                            src={card.image} 
-                            alt={card.name} 
-                            className="w-8 h-10 object-cover rounded border border-white/20 shadow-sm hover:scale-110 transition-transform duration-200 cursor-pointer" 
-                          />
-                        ))}
-                        {player.hand.length > 8 && (
-                          <div className="w-8 h-10 bg-white/10 rounded border border-white/20 flex items-center justify-center text-white text-xs font-medium">
-                            +{player.hand.length - 8}
-                          </div>
-                        )}
-                      </div>
                     </div>
 
                     {/* Properties */}
