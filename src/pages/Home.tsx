@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
+import { useState, useContext, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { StoreContext } from "../game/store/context";
 import type { Player, GameState } from "../game/store/gameStore";
