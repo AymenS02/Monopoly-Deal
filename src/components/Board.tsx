@@ -1,7 +1,7 @@
 import { useContext } from "react";
 import { StoreContext } from "../game/store/context";
 import type { Player } from "../game/store/gameStore";
-import type { Card } from "../game/data/cards";
+import type { Card } from "../game/utils/deck";
 
 const Board = () => {
   const context = useContext(StoreContext);
