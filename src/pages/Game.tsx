@@ -5,6 +5,11 @@ import Hand from "../components/Hand";
 import { socket } from "../game/socket";
 import { useGameStore } from "../game/store/gameStoreZustand";
 
+// Function to get persistent player ID
+function getPersistentPlayerId() {
+  return sessionStorage.getItem('playerPersistentId');
+}
+
 const Game = () => {
   const navigate = useNavigate();
   const gameState = useGameStore((state) => state.gameState);
@@ -15,8 +20,12 @@ const Game = () => {
   const setPlayerId = useGameStore((state) => state.setPlayerId);
   const clearGameState = useGameStore((state) => state.clearGameState);
 
-  // Find your player object
-  const me = gameState.players.find((p) => p.id === playerId || p.id === socket.id);
+  // Find your player object - now also check by persistentId
+  const me = gameState.players.find((p) => 
+    p.id === playerId || 
+    p.id === socket.id || 
+    (p as any).persistentId === getPersistentPlayerId()
+  );
   
   useEffect(() => {
     let retryCount = 0;
@@ -28,12 +37,17 @@ const Game = () => {
       // Check if we have stored room/player info
       const storedRoom = localStorage.getItem("monopoly_room");
       const storedPlayerName = localStorage.getItem("monopoly_player_name");
+      const persistentId = getPersistentPlayerId();
       
       if (storedRoom && storedPlayerName) {
-        console.log("🔄 Auto-rejoining room:", storedRoom, "as", storedPlayerName);
+        console.log("🔄 Auto-rejoining room:", storedRoom, "as", storedPlayerName, "with persistent ID:", persistentId);
         
-        // Rejoin the room first
-        socket.emit("join_room", { room: storedRoom, name: storedPlayerName });
+        // Rejoin the room first with persistent ID
+        socket.emit("join_room", { 
+          room: storedRoom, 
+          name: storedPlayerName,
+          persistentId: persistentId
+        });
         
         // Then request game state with retry logic
         const requestWithRetry = () => {
@@ -65,6 +79,16 @@ const Game = () => {
 
     // Listen for connect event in case socket wasn't ready
     socket.on("connect", rejoinAndRequestState);
+
+    // Listen for reconnection confirmation
+    socket.on('reconnection_confirmed', (data: { persistentId: string }) => {
+      console.log('🎉 Reconnected successfully with persistent ID:', data.persistentId);
+      // Request game state after successful reconnection
+      setTimeout(() => {
+        console.log("🔄 Requesting game state after reconnection confirmation");
+        socket.emit("request_game_state");
+      }, 100);
+    });
 
     // Handle successful rejoin
     socket.on("player_count_update", (count: number) => {
@@ -99,12 +123,19 @@ const Game = () => {
         console.log("👤 Setting player ID:", socket.id);
         setPlayerId(socket.id);
       }
+      
+      // Store the persistent ID if it was sent
+      if (data.persistentId) {
+        sessionStorage.setItem('playerPersistentId', data.persistentId);
+        console.log("💾 Stored persistent ID:", data.persistentId);
+      }
     };
     socket.on("game_state", handleGameState);
 
     // Cleanup
     return () => {
       socket.off("connect", rejoinAndRequestState);
+      socket.off("reconnection_confirmed");
       socket.off("player_count_update");
       socket.off("game_state", handleGameState);
     };
@@ -115,10 +146,35 @@ const Game = () => {
   const currentHand = myHand.length > 0 ? myHand : (me?.hand || []);
 
   const leaveGame = () => {
-    // Clear localStorage
+    // Clear localStorage but keep sessionStorage for potential reconnection
     localStorage.removeItem("monopoly_room");
     localStorage.removeItem("monopoly_player_name");
     localStorage.removeItem("monopoly_game_active");
+    // Note: We're keeping the persistentId in sessionStorage for future reconnections
+    
+    // Clear Zustand state
+    if (clearGameState) {
+      clearGameState();
+    }
+    
+    // Disconnect from current room
+    socket.disconnect();
+    
+    // Reconnect for future use
+    setTimeout(() => {
+      socket.connect();
+    }, 100);
+    
+    // Navigate back to home
+    navigate("/");
+  };
+
+  const forceLeaveAndClearAll = () => {
+    // Clear everything including persistent ID
+    localStorage.removeItem("monopoly_room");
+    localStorage.removeItem("monopoly_player_name");
+    localStorage.removeItem("monopoly_game_active");
+    sessionStorage.removeItem("playerPersistentId");
     
     // Clear Zustand state
     if (clearGameState) {
@@ -139,15 +195,23 @@ const Game = () => {
 
   return (
     <div className="w-screen h-screen flex flex-col justify-between items-center bg-gradient-to-br from-green-800 to-green-900 p-6">
-      {/* Top bar with leave button */}
+      {/* Top bar with leave buttons */}
       <div className="w-full max-w-7xl flex justify-between items-center mb-4">
         <div className="text-white text-xl font-bold">Monopoly Deal</div>
-        <button
-          onClick={leaveGame}
-          className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200 font-medium"
-        >
-          Leave Game
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={leaveGame}
+            className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors duration-200 font-medium"
+          >
+            Leave Game
+          </button>
+          <button
+            onClick={forceLeaveAndClearAll}
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200 font-medium text-sm"
+          >
+            Leave & Clear All
+          </button>
+        </div>
       </div>
 
       <div className="flex-1 w-full flex justify-center overflow-auto">
@@ -168,9 +232,10 @@ const Game = () => {
       )}
       
       {/* Debug info */}
-      <div className="text-white text-xs mt-2">
+      <div className="text-white text-xs mt-2 text-center">
         <div>Socket ID: {socket.id}</div>
         <div>Player ID: {playerId}</div>
+        <div>Persistent ID: {getPersistentPlayerId()}</div>
         <div>Hand Count: {currentHand.length}</div>
         <div>Game State Players: {gameState.players.length}</div>
       </div>

@@ -5,6 +5,16 @@ import type { Card } from "../game/utils/deck";
 import { socket } from "../game/socket";
 import { useGameStore } from "../game/store/gameStoreZustand";
 
+// Function to get or create persistent player ID
+function getPersistentPlayerId() {
+  let persistentId = sessionStorage.getItem('playerPersistentId');
+  if (!persistentId) {
+    persistentId = `player_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    sessionStorage.setItem('playerPersistentId', persistentId);
+  }
+  return persistentId;
+}
+
 function Home() {
   const navigate = useNavigate();
   const setGameState = useGameStore((state) => state.setGameState);
@@ -16,6 +26,7 @@ function Home() {
   const [playerCount, setPlayerCount] = useState(0);
   const [isStarting, setIsStarting] = useState(false);
   const [isHost, setIsHost] = useState(false);
+  const [reconnectionStatus, setReconnectionStatus] = useState<string>("");
 
   useEffect(() => {
     // Check if we're returning from a refresh and should auto-navigate
@@ -34,6 +45,21 @@ function Home() {
     socket.on("set_host", () => {
       alert("You are now the host!");
       setIsHost(true);
+    });
+
+    // Listen for persistent ID assignment (for new players)
+    socket.on('persistent_id_assigned', (data: { persistentId: string }) => {
+      sessionStorage.setItem('playerPersistentId', data.persistentId);
+      console.log('Persistent ID assigned:', data.persistentId);
+      setReconnectionStatus("New player registered!");
+      setTimeout(() => setReconnectionStatus(""), 3000);
+    });
+
+    // Listen for reconnection confirmation
+    socket.on('reconnection_confirmed', (data: { persistentId: string }) => {
+      console.log('Successfully reconnected with persistent ID:', data.persistentId);
+      setReconnectionStatus("Reconnected successfully!");
+      setTimeout(() => setReconnectionStatus(""), 3000);
     });
 
     socket.on("game_started", (data: {
@@ -69,11 +95,20 @@ function Home() {
       navigate("/game");
     });
 
+    // Auto-request game state when socket connects
+    socket.on('connect', () => {
+      console.log('Socket connected, requesting game state...');
+      socket.emit('request_game_state');
+    });
+
     return () => {
       socket.off("player_count_update");
       socket.off("room_full");
       socket.off("set_host");
       socket.off("game_started");
+      socket.off('persistent_id_assigned');
+      socket.off('reconnection_confirmed');
+      socket.off('connect');
     };
   }, [playerName, setGameState, setMyHand, setPlayerId, navigate, room]);
 
@@ -82,8 +117,20 @@ function Home() {
       alert("Please enter a room and your player name.");
       return;
     }
-    socket.emit("join_room", { room: room.trim(), name: playerName.trim() });
+    
+    // Get the persistent ID and include it in the join request
+    const persistentId = getPersistentPlayerId();
+    console.log('Joining room with persistent ID:', persistentId);
+    
+    socket.emit("join_room", { 
+      room: room.trim(), 
+      name: playerName.trim(),
+      persistentId: persistentId
+    });
+    
     setIsHost(false);
+    setReconnectionStatus("Joining room...");
+    setTimeout(() => setReconnectionStatus(""), 2000);
   };
 
   const startGame = () => {
@@ -95,9 +142,25 @@ function Home() {
     setIsStarting(true);
   };
 
+  const clearAllData = () => {
+    // Clear both localStorage and sessionStorage
+    localStorage.removeItem("monopoly_room");
+    localStorage.removeItem("monopoly_player_name");
+    localStorage.removeItem("monopoly_game_active");
+    sessionStorage.removeItem("playerPersistentId");
+    alert("All game data cleared!");
+  };
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gray-900 text-white">
       <h1 className="text-4xl font-bold mb-4">Monopoly Deal</h1>
+
+      {/* Show reconnection status */}
+      {reconnectionStatus && (
+        <div className="mb-4 px-4 py-2 bg-blue-600 rounded text-white text-sm">
+          {reconnectionStatus}
+        </div>
+      )}
 
       <div className="mb-6 flex flex-col md:flex-row gap-2">
         <input
@@ -105,14 +168,14 @@ function Home() {
           placeholder="Enter your name"
           value={playerName}
           onChange={(e) => setPlayerName(e.target.value)}
-          className="px-4 py-2 rounded text-white"
+          className="px-4 py-2 rounded text-black"
         />
         <input
           type="text"
           placeholder="Enter room name"
           value={room}
           onChange={(e) => setRoom(e.target.value)}
-          className="px-4 py-2 rounded text-white"
+          className="px-4 py-2 rounded text-black"
         />
         <button
           onClick={joinRoom}
@@ -133,17 +196,18 @@ function Home() {
         {isStarting ? "Starting..." : "Start Game"}
       </button>
       
+      {/* Debug info */}
+      <div className="mt-4 text-xs text-gray-400 text-center">
+        <div>Socket ID: {socket.id}</div>
+        <div>Persistent ID: {sessionStorage.getItem('playerPersistentId')}</div>
+      </div>
+      
       {/* Clear game data button for testing */}
       <button
-        onClick={() => {
-          localStorage.removeItem("monopoly_room");
-          localStorage.removeItem("monopoly_player_name");
-          localStorage.removeItem("monopoly_game_active");
-          alert("Game data cleared!");
-        }}
+        onClick={clearAllData}
         className="mt-4 px-4 py-2 bg-red-600 rounded hover:bg-red-700 text-sm"
       >
-        Clear Saved Game Data
+        Clear All Game Data
       </button>
     </div>
   );
