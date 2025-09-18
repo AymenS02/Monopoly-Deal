@@ -3,11 +3,42 @@ import { useGameStore } from "../game/store/gameStoreZustand";
 const Board = () => {
   // Zustand store
   const gameState = useGameStore((state) => state.gameState);
+  const setGameState = useGameStore((state) => state.setGameState);
+  const myHand = useGameStore((state) => state.myHand);
+  const setMyHand = useGameStore((state) => state.setMyHand);
+
 
   // Fallbacks if gameState is undefined
   const players = gameState?.players || [];
   const deck = gameState?.deck || [];
   const discardPile = gameState?.discardPile || [];
+  
+
+
+  const drawCards = () => {
+    if (deck.length < 2) {
+      console.warn("Not enough cards to draw!");
+      return;
+    }
+
+    // take first 2 cards
+    const drawn = deck.slice(0, 2);
+
+    // remove them from deck
+    const newDeck = deck.slice(2);
+
+    // add them to myHand
+    const newHand = [...myHand, ...drawn];
+
+    // update Zustand state
+    setGameState({ deck: newDeck });
+    setMyHand(newHand);
+
+    console.log("Drawn:", drawn);
+    console.log("New deck:", newDeck);
+    console.log("New hand:", newHand);
+  };
+
   
   return (
     <div className="min-h-screen  p-6">
@@ -17,7 +48,7 @@ const Board = () => {
           <div className="flex gap-8 p-8 bg-black/20 backdrop-blur-sm rounded-2xl border border-white/10 shadow-2xl">
             {/* Deck */}
             <div className="group cursor-pointer transition-all duration-300 hover:scale-105">
-              <div className="relative bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl p-6 w-48 h-64 shadow-lg border border-blue-400/30">
+              <div onClick={drawCards} className="relative bg-gradient-to-br from-blue-600 to-blue-800 rounded-xl p-6 w-48 h-64 shadow-lg border border-blue-400/30">
                 <div className="absolute inset-0 bg-gradient-to-br from-white/20 to-transparent rounded-xl"></div>
                 <div className="relative z-10 flex flex-col items-center justify-center h-full text-white">
                   <div className="w-16 h-20 bg-blue-900/50 rounded-lg border-2 border-blue-300/50 mb-4 flex items-center justify-center shadow-inner">

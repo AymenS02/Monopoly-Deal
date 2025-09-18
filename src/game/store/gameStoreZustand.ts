@@ -32,6 +32,7 @@ const initialGameState: GameState = {
   deck: [],
   discardPile: [],
   currentPlayer: 0,
+  movesLeft: 3, // initialize movesLeft to 0 or your desired default
 };
 
 export const useGameStore = create<GameStore>((set) => ({

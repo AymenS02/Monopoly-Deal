@@ -17,4 +17,5 @@ export type GameState = {
   deck: Card[];
   discardPile: Card[];
   currentPlayer: number;
+  movesLeft: number; // how many moves remain
 };
