@@ -1,21 +1,34 @@
-import { useState, useContext, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { StoreContext } from "../game/store/context";
 import type { Player, GameState } from "../game/store/gameStore";
 import type { Card } from "../game/utils/deck";
-import { socket } from "../game/socket"; // make sure you export socket from your socket file
+import { socket } from "../game/socket";
+import { useGameStore } from "../game/store/gameStoreZustand";
 
 function Home() {
   const navigate = useNavigate();
-  const { setGameState } = useContext(StoreContext)!;
+  const setGameState = useGameStore((state) => state.setGameState);
+  const setMyHand = useGameStore((state) => state.setMyHand);
+  const setPlayerId = useGameStore((state) => state.setPlayerId);
 
   const [room, setRoom] = useState("");
-  const [playerName, setPlayerName] = useState(""); // NEW: player name input
+  const [playerName, setPlayerName] = useState(""); 
   const [playerCount, setPlayerCount] = useState(0);
   const [isStarting, setIsStarting] = useState(false);
   const [isHost, setIsHost] = useState(false);
 
   useEffect(() => {
+    // Check if we're returning from a refresh and should auto-navigate
+    const storedRoom = localStorage.getItem("monopoly_room");
+    const storedPlayerName = localStorage.getItem("monopoly_player_name");
+    const hasActiveGame = localStorage.getItem("monopoly_game_active");
+    
+    if (storedRoom && storedPlayerName && hasActiveGame === "true") {
+      // Auto-navigate back to game
+      navigate("/game");
+      return;
+    }
+
     socket.on("player_count_update", (count: number) => setPlayerCount(count));
     socket.on("room_full", () => alert("Room is full! Try another room."));
     socket.on("set_host", () => {
@@ -29,11 +42,9 @@ function Home() {
       deckCount: number,
       discardPile: Card[]
     }) => {
-      if (!setGameState) return;
-
       const players: Player[] = data.players.map(p => ({
         id: p.id,
-        name: p.id === socket.id ? playerName : p.name, // use the entered name
+        name: p.id === socket.id ? playerName : p.name,
         hand: p.id === socket.id ? data.hand : Array(p.handCount).fill({} as Card),
         bank: p.bank,
         properties: p.properties
@@ -46,7 +57,15 @@ function Home() {
         currentPlayer: 0
       };
 
+      // Store game info for refresh recovery
+      localStorage.setItem("monopoly_room", room);
+      localStorage.setItem("monopoly_player_name", playerName);
+      localStorage.setItem("monopoly_game_active", "true");
+
       setGameState(initialGameState);
+      setMyHand(data.hand);
+      setPlayerId(socket.id || "");
+      
       navigate("/game");
     });
 
@@ -56,7 +75,7 @@ function Home() {
       socket.off("set_host");
       socket.off("game_started");
     };
-  }, [playerName, setGameState, navigate]);
+  }, [playerName, setGameState, setMyHand, setPlayerId, navigate, room]);
 
   const joinRoom = () => {
     if (room.trim() === "" || playerName.trim() === "") {
@@ -112,6 +131,19 @@ function Home() {
         className="px-6 py-3 bg-blue-600 rounded disabled:opacity-50 hover:bg-blue-700"
       >
         {isStarting ? "Starting..." : "Start Game"}
+      </button>
+      
+      {/* Clear game data button for testing */}
+      <button
+        onClick={() => {
+          localStorage.removeItem("monopoly_room");
+          localStorage.removeItem("monopoly_player_name");
+          localStorage.removeItem("monopoly_game_active");
+          alert("Game data cleared!");
+        }}
+        className="mt-4 px-4 py-2 bg-red-600 rounded hover:bg-red-700 text-sm"
+      >
+        Clear Saved Game Data
       </button>
     </div>
   );

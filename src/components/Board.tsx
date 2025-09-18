@@ -1,17 +1,14 @@
-import { useContext } from "react";
-import { StoreContext } from "../game/store/context";
-import type { Player } from "../game/store/gameStore";
-import type { Card } from "../game/utils/deck";
+import { useGameStore } from "../game/store/gameStoreZustand";
 
 const Board = () => {
-  const context = useContext(StoreContext);
-  if (!context) throw new Error("StoreContext not provided");
+  // Zustand store
+  const gameState = useGameStore((state) => state.gameState);
 
-  const { gameState } = context;
-  const players: Player[] = gameState?.players || [];
-  const deck: Card[] = gameState?.deck || [];
-  const discardPile: Card[] = gameState?.discardPile || [];
-
+  // Fallbacks if gameState is undefined
+  const players = gameState?.players || [];
+  const deck = gameState?.deck || [];
+  const discardPile = gameState?.discardPile || [];
+  
   return (
     <div className="min-h-screen  p-6">
       <div className="max-w-7xl mx-auto">

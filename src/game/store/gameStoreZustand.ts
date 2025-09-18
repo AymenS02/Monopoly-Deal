@@ -21,15 +21,21 @@ type GameStore = {
   // Selected card for play
   selectedCard: Card | undefined;
   setSelectedCard: (card: Card | undefined) => void;
+
+  // Clear all game state
+  clearGameState: () => void;
+};
+
+// Initial state values
+const initialGameState: GameState = {
+  players: [],
+  deck: [],
+  discardPile: [],
+  currentPlayer: 0,
 };
 
 export const useGameStore = create<GameStore>((set) => ({
-  gameState: {
-    players: [],
-    deck: [],
-    discardPile: [],
-    currentPlayer: 0,
-  },
+  gameState: initialGameState,
   setGameState: (state) =>
     set((prev) => ({
       gameState: { ...prev.gameState, ...state },
@@ -46,4 +52,13 @@ export const useGameStore = create<GameStore>((set) => ({
 
   selectedCard: undefined,
   setSelectedCard: (card) => set({ selectedCard: card }),
+
+  // Reset everything back to initial state
+  clearGameState: () => set({
+    gameState: initialGameState,
+    myHand: [],
+    playerId: undefined,
+    myPlayer: undefined,
+    selectedCard: undefined,
+  }),
 }));
