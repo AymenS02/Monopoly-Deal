@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { socket } from "../game/socket";
 import { useGameStore } from "../game/store/gameStoreZustand";
 
@@ -12,9 +12,14 @@ const Board = () => {
   const players = gameState?.players || [];
   const deck = gameState?.deck || [];
   const discardPile = gameState?.discardPile || [];
-  
+
+  const [drawnCards, setDrawnCards] = useState(false);
 
   const drawCards = () => {
+    if (drawnCards) {
+      console.warn("⚠️ You've already drawn cards this turn!");
+      return;
+    }
     const storedRoom = localStorage.getItem("monopoly_room");
     if (!storedRoom) {
       console.warn("⚠️ No stored room found!");
@@ -22,7 +27,9 @@ const Board = () => {
     }
     console.log("Drawing 2 cards...");
     socket.emit("draw_cards", { room: storedRoom, count: 2 });
+    setDrawnCards(true);
   };
+
 
   useEffect(() => {
     socket.on("game_state", ({ players, deckCount, discardPile, currentPlayer }) => {

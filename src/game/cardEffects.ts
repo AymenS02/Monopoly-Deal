@@ -4,6 +4,10 @@ import type { Card } from "./utils/deck";
 export type CardEffect = (card: Card, playerName: string) => void;
 
 export const cardEffects: Record<string, CardEffect> = {
+  // --- Money cards ---
+  play_money: (card, playerName) => {
+    console.log(`${playerName} played ${card.name} → Add $${card.value}M to your bank!`);
+  },
   // --- Stealing / Blocking ---
   steal_full_set: (card, playerName) => {
     console.log(`${playerName} played ${card.name} → Steal a full property set!`);

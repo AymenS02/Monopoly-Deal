@@ -31,6 +31,7 @@ export const cards: CardTemplate[] = [
         value: 1,
         image: "/cash/m1.jpg",
         quantity: 6,
+        actionEffect: "play_money"
     },
     {
         id: 2,
@@ -39,6 +40,7 @@ export const cards: CardTemplate[] = [
         value: 2,
         image: "/cash/m2.jpg",
         quantity: 5,
+        actionEffect: "play_money"
     },
     {
         id: 3,
@@ -47,6 +49,8 @@ export const cards: CardTemplate[] = [
         value: 3,
         image: "/cash/m3.jpg",
         quantity: 3,
+        actionEffect: "play_money"
+
     },
     {
         id: 4,
@@ -55,6 +59,7 @@ export const cards: CardTemplate[] = [
         value: 4,
         image: "/cash/m4.jpg",
         quantity: 3,
+        actionEffect: "play_money"
     },
     {
         id: 5,
@@ -63,6 +68,7 @@ export const cards: CardTemplate[] = [
         value: 5,
         image: "/cash/m5.jpg",
         quantity: 2,
+        actionEffect: "play_money"
     },
     {
         id: 6,
@@ -71,6 +77,7 @@ export const cards: CardTemplate[] = [
         value: 10,
         image: "/cash/m10.jpg",
         quantity: 1,
+        actionEffect: "play_money"
     },
 
     // =============================
