@@ -44,7 +44,7 @@ const Hand: React.FC<HandProps> = ({ playerName, hand, isMe = false }) => {
           </div>
         )}
 
-        {safeHand.slice(0, 8).map((card, index) =>
+        {safeHand.slice(0, 50).map((card, index) =>
           isMe && card ? (
             <img
               key={card.instanceId || `card-${index}`}

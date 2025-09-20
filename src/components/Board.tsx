@@ -1,12 +1,12 @@
+import { useEffect } from "react";
+import { socket } from "../game/socket";
 import { useGameStore } from "../game/store/gameStoreZustand";
 
 const Board = () => {
   // Zustand store
   const gameState = useGameStore((state) => state.gameState);
   const setGameState = useGameStore((state) => state.setGameState);
-  const myHand = useGameStore((state) => state.myHand);
   const setMyHand = useGameStore((state) => state.setMyHand);
-
 
   // Fallbacks if gameState is undefined
   const players = gameState?.players || [];
@@ -14,30 +14,35 @@ const Board = () => {
   const discardPile = gameState?.discardPile || [];
   
 
-
   const drawCards = () => {
-    if (deck.length < 2) {
-      console.warn("Not enough cards to draw!");
+    const storedRoom = localStorage.getItem("monopoly_room");
+    if (!storedRoom) {
+      console.warn("⚠️ No stored room found!");
       return;
     }
-
-    // take first 2 cards
-    const drawn = deck.slice(0, 2);
-
-    // remove them from deck
-    const newDeck = deck.slice(2);
-
-    // add them to myHand
-    const newHand = [...myHand, ...drawn];
-
-    // update Zustand state
-    setGameState({ deck: newDeck });
-    setMyHand(newHand);
-
-    console.log("Drawn:", drawn);
-    console.log("New deck:", newDeck);
-    console.log("New hand:", newHand);
+    console.log("Drawing 2 cards...");
+    socket.emit("draw_cards", { room: storedRoom, count: 2 });
   };
+
+  useEffect(() => {
+    socket.on("game_state", ({ players, deckCount, discardPile, currentPlayer }) => {
+      setGameState({
+        players,
+        deck: Array(deckCount).fill({}), // hide cards but keep count
+        discardPile,
+        currentPlayer,
+      });
+    });
+
+    socket.on("hand_update", (hand) => {
+      setMyHand(hand);
+    });
+
+    return () => {
+      socket.off("game_state");
+      socket.off("hand_update");
+    };
+  }, [setGameState, setMyHand]);
 
   
   return (
